@@ -1,0 +1,114 @@
+name: Test & Build APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  checks: write
+
+env:
+  XREAL_SDK_URL: https://public-resource.xreal.com/download/XREALSDK_Release_3.1.0.20251125/com.xreal.xr.tar.gz
+
+jobs:
+  license-check:
+    name: Check Unity license secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify secrets
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          missing=""
+          [ -z "$UNITY_LICENSE" ] && missing="$missing UNITY_LICENSE"
+          [ -z "$UNITY_EMAIL" ] && missing="$missing UNITY_EMAIL"
+          [ -z "$UNITY_PASSWORD" ] && missing="$missing UNITY_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secrets:$missing  (Settings > Secrets and variables > Actions)"
+            exit 1
+          fi
+          echo "Unity secrets present."
+
+  test:
+    name: Unity tests (EditMode + full-game PlayMode)
+    needs: license-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download XREAL SDK 3.1.0 (from XREAL, not redistributed in this repo)
+        run: curl -fL --retry 3 -o com.xreal.xr.tar.gz "$XREAL_SDK_URL" && ls -la com.xreal.xr.tar.gz
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-test-${{ hashFiles('Packages/manifest.json', 'ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: Library-test-
+      - uses: game-ci/unity-test-runner@v4
+        id: tests
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          testMode: all
+          artifactsPath: test-results
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          checkName: Resonance test results
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: test-results
+
+  build:
+    name: Build Android APK
+    needs: license-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          large-packages: false
+      - uses: actions/checkout@v4
+      - name: Download XREAL SDK 3.1.0
+        run: curl -fL --retry 3 -o com.xreal.xr.tar.gz "$XREAL_SDK_URL"
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-android-${{ hashFiles('Packages/manifest.json', 'ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: Library-android-
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: Android
+          buildName: Resonance
+          androidExportType: androidPackage
+          versioning: Semantic
+      - name: Locate APK
+        id: apk
+        run: |
+          f=$(find build -name "*.apk" | head -1)
+          [ -z "$f" ] && { echo "::error::No APK produced"; exit 1; }
+          cp "$f" Resonance.apk
+          echo "size=$(du -h Resonance.apk | cut -f1)" >> $GITHUB_OUTPUT
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Resonance-apk
+          path: Resonance.apk
+      - name: Publish release (download this on the Beam Pro)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Resonance build ${{ github.run_number }}
+          prerelease: true
+          files: Resonance.apk
+          body: |
+            Debug-signed test build from commit ${{ github.sha }} (${{ steps.apk.outputs.size }}).
+            Install on the Beam Pro: open this page in the browser, download Resonance.apk, allow "install unknown apps", open it.
+            Then run **SYSTEM CHECK** from the title menu.

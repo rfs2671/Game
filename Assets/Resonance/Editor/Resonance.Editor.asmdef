@@ -1,0 +1,20 @@
+{
+    "name": "Resonance.Editor",
+    "rootNamespace": "Resonance.EditorTools",
+    "references": [
+        "Resonance",
+        "Unity.XR.ARFoundation",
+        "Unity.XR.CoreUtils"
+    ],
+    "includePlatforms": ["Editor"],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [
+        { "name": "com.unity.xr.arfoundation", "expression": "5.0.0", "define": "RESONANCE_ARF" }
+    ],
+    "noEngineReferences": false
+}

@@ -1,0 +1,49 @@
+{
+    "name": "Resonance",
+    "rootNamespace": "Resonance",
+    "references": [
+        "Unity.XR.Hands",
+        "Unity.XR.ARFoundation",
+        "Unity.XR.ARSubsystems",
+        "Unity.XR.CoreUtils",
+        "Unity.InputSystem",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.XR.Management"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.xr.hands",
+            "expression": "1.0.0",
+            "define": "RESONANCE_XRHANDS"
+        },
+        {
+            "name": "com.unity.xr.arfoundation",
+            "expression": "5.0.0",
+            "define": "RESONANCE_ARF"
+        },
+        {
+            "name": "com.unity.inputsystem",
+            "expression": "1.0.0",
+            "define": "RESONANCE_INPUTSYSTEM"
+        },
+        {
+            "name": "com.unity.render-pipelines.universal",
+            "expression": "14.0.0",
+            "define": "RESONANCE_URP"
+        },
+        {
+            "name": "com.unity.xr.management",
+            "expression": "4.0.0",
+            "define": "RESONANCE_XRMGMT"
+        }
+    ],
+    "noEngineReferences": false
+}
