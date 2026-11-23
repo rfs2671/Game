@@ -195,8 +195,14 @@ namespace Resonance
             var sh = streaks.shape; sh.shapeType = ParticleSystemShapeType.Circle; sh.radius = radius; sh.radiusThickness = 1f;
             var vel = streaks.velocityOverLifetime;
             vel.enabled = true; vel.space = ParticleSystemSimulationSpace.Local;
+            // every orbital/linear/radial curve must use the same mode (two constants)
+            vel.x = new ParticleSystem.MinMaxCurve(0f, 0f);
+            vel.y = new ParticleSystem.MinMaxCurve(0f, 0f);
+            vel.z = new ParticleSystem.MinMaxCurve(0f, 0f);
+            vel.orbitalX = new ParticleSystem.MinMaxCurve(0f, 0f);
+            vel.orbitalY = new ParticleSystem.MinMaxCurve(0f, 0f);
             vel.orbitalZ = new ParticleSystem.MinMaxCurve(5f, 8f);
-            vel.radial = new ParticleSystem.MinMaxCurve(-0.6f - inward * 3f);
+            vel.radial = new ParticleSystem.MinMaxCurve(-0.6f - inward * 3f, -0.4f - inward * 3f);
             var main = streaks.main; main.simulationSpace = ParticleSystemSimulationSpace.Local;
             var r = streaks.GetComponent<ParticleSystemRenderer>();
             r.renderMode = ParticleSystemRenderMode.Stretch; r.velocityScale = 0.08f; r.lengthScale = 1.2f;

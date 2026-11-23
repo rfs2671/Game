@@ -26,6 +26,10 @@ namespace Resonance
         void OnLog(string msg, string stack, LogType type)
         {
             if (type != LogType.Error && type != LogType.Exception && type != LogType.Assert) return;
+#if UNITY_EDITOR
+            // XREAL's native plugin only exists on the glasses; the editor can't load it. Not a game error.
+            if (msg.Contains("XREALXRPlugin")) return;
+#endif
             Errors++;
             if (ErrorLog.Count < 12) ErrorLog.Add($"{lastStep}: {msg}");
         }
