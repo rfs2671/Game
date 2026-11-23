@@ -62,7 +62,7 @@ namespace Resonance.EditorTools
             var arr = so.FindProperty("m_AlwaysIncludedShaders");
             var names = new System.Collections.Generic.List<string>(Mats.ShaderNamesBuiltin);
             if (GraphicsSettings.currentRenderPipeline != null) names.AddRange(Mats.ShaderNamesURP);
-            names.Add("GUI/Text Shader");
+            // (GUI/Text Shader is internal editor data — Android builds reject it; the built-in font brings its own material)
             int added = 0;
             foreach (var n in names)
             {
