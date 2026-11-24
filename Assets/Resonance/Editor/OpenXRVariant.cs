@@ -28,6 +28,7 @@ namespace Resonance.EditorTools
     public static class OpenXRVariant
     {
         public const string AppId = "com.rfs2671.resonance.openxr";
+        public const AndroidSdkVersions AndroidTargetSdk = (AndroidSdkVersions)32;
         const string OpenXRLoaderType = "UnityEngine.XR.OpenXR.OpenXRLoader";
 
         // OpenXR feature classes to enable (matched by class name):
@@ -37,7 +38,7 @@ namespace Resonance.EditorTools
             "HandTracking",
             "MetaQuestFeature",
             "ARSessionFeature", "ARCameraFeature", "ARPlaneFeature", "ARAnchorFeature", "ARRaycastFeature",
-            "SeeThroughBlendFeature",   // Resonance: ADDITIVE / ALPHA_BLEND environment blend when offered
+            "BlendModeReportFeature",   // Resonance: read-only, logs the runtime-selected blend mode
         };
 
         /// <summary>game-ci buildMethod for the OpenXR APK.</summary>
@@ -95,10 +96,12 @@ namespace Resonance.EditorTools
             // 5) Install side by side with the XREAL build.
             PlayerSettings.SetApplicationIdentifier(android, AppId);
             PlayerSettings.productName = "Resonance OpenXR";
+            // Target API 32 (the OpenXR APK only): lets the Khronos loader find a non-Meta runtime without a repack.
+            PlayerSettings.Android.targetSdkVersion = AndroidTargetSdk;
 
             AssetDatabase.SaveAssets();
             Debug.Log("[Resonance/OpenXR] Variant applied: loader=OpenXR, features=" + string.Join(", ", Features) +
-                      $", appId={AppId}, graphics={string.Join("/", PlayerSettings.GetGraphicsAPIs(BuildTarget.Android))}. Enabled now: " + string.Join(", ", all.Cast<object>().Where(IsEnabled).Select(x => x.GetType().Name)));
+                      $", appId={AppId}, graphics={string.Join("/", PlayerSettings.GetGraphicsAPIs(BuildTarget.Android))}, targetSdk={(int)PlayerSettings.Android.targetSdkVersion}. Enabled now: " + string.Join(", ", all.Cast<object>().Where(IsEnabled).Select(x => x.GetType().Name)));
 #else
             throw new BuildFailedException("[Resonance/OpenXR] XR Plug-in Management is not installed.");
 #endif
