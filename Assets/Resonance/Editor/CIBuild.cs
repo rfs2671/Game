@@ -23,6 +23,7 @@ namespace Resonance.EditorTools
             {
                 if (openXR) OpenXRVariant.Apply();
                 else OpenXRVariant.OpenXRSettingsFor(BuildTargetGroup.Android);   // warm-up only; loader untouched
+                StripEditorOnlyPreloads();
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
 
@@ -55,6 +56,21 @@ namespace Resonance.EditorTools
                 Debug.LogError("[Resonance/CI] " + e);
                 EditorApplication.Exit(1);
             }
+        }
+
+        /// <summary>
+        /// The XREAL template preloads AR Foundation's XR Simulation settings. That script only exists in the Editor and on
+        /// desktop, so on Android it shows up as "referenced script is missing" at startup. Drop it, and any deleted entries
+        /// (the OpenXR job removes XREALSettings), from Preloaded Assets for the Android build.
+        /// </summary>
+        static void StripEditorOnlyPreloads()
+        {
+            var before = PlayerSettings.GetPreloadedAssets();
+            var keep = before.Where(o => o != null && !o.GetType().Name.StartsWith("XRSimulation")).ToArray();
+            if (keep.Length == before.Length) return;
+            PlayerSettings.SetPreloadedAssets(keep);
+            Debug.Log($"[Resonance/CI] Preloaded assets: removed {before.Length - keep.Length} editor-only/missing entries; kept " +
+                      string.Join(", ", keep.Select(o => o.name)));
         }
 
         static string ArgValue(string name)

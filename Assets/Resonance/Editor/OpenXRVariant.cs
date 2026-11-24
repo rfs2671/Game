@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
+using UnityEngine.Rendering;
 #if RESONANCE_XRMGMT
 using UnityEditor.XR.Management;
 using UnityEditor.XR.Management.Metadata;
@@ -36,6 +37,7 @@ namespace Resonance.EditorTools
             "HandTracking",
             "MetaQuestFeature",
             "ARSessionFeature", "ARCameraFeature", "ARPlaneFeature", "ARAnchorFeature", "ARRaycastFeature",
+            "SeeThroughBlendFeature",   // Resonance: ADDITIVE / ALPHA_BLEND environment blend when offered
         };
 
         /// <summary>game-ci buildMethod for the OpenXR APK.</summary>
@@ -83,16 +85,20 @@ namespace Resonance.EditorTools
                 throw new BuildFailedException($"[Resonance/OpenXR] Features not found: {string.Join(", ", missing)}. Available: {have}");
             }
 
-            // 3) Apply OpenXR's own automatic project fixes (API level, graphics APIs, etc).
+            // 3) Vulkan first (what Unity's OpenXR samples use), GLES3 fallback for devices without Vulkan.
+            PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
+            PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { GraphicsDeviceType.Vulkan, GraphicsDeviceType.OpenGLES3 });
+
+            // 4) Apply OpenXR's own automatic project fixes (API level, graphics APIs, etc).
             AutoFix(android);
 
-            // 4) Install side by side with the XREAL build.
+            // 5) Install side by side with the XREAL build.
             PlayerSettings.SetApplicationIdentifier(android, AppId);
             PlayerSettings.productName = "Resonance OpenXR";
 
             AssetDatabase.SaveAssets();
             Debug.Log("[Resonance/OpenXR] Variant applied: loader=OpenXR, features=" + string.Join(", ", Features) +
-                      $", appId={AppId}. Enabled now: " + string.Join(", ", all.Cast<object>().Where(IsEnabled).Select(x => x.GetType().Name)));
+                      $", appId={AppId}, graphics={string.Join("/", PlayerSettings.GetGraphicsAPIs(BuildTarget.Android))}. Enabled now: " + string.Join(", ", all.Cast<object>().Where(IsEnabled).Select(x => x.GetType().Name)));
 #else
             throw new BuildFailedException("[Resonance/OpenXR] XR Plug-in Management is not installed.");
 #endif

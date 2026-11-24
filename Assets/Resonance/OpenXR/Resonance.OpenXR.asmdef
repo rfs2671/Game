@@ -1,0 +1,19 @@
+{
+    "name": "Resonance.OpenXR",
+    "rootNamespace": "Resonance.OpenXRSupport",
+    "references": [
+        "Resonance",
+        "Unity.XR.OpenXR"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": ["RESONANCE_OPENXR"],
+    "versionDefines": [
+        { "name": "com.unity.xr.openxr", "expression": "1.7.0", "define": "RESONANCE_OPENXR" }
+    ],
+    "noEngineReferences": false
+}

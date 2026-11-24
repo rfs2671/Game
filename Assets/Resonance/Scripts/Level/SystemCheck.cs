@@ -61,9 +61,9 @@ namespace Resonance
                 yield return null;
             }
             string result = Errors == 0 && MissingAudio.Count == 0 ? "PASS" : "FAIL";
-            Debug.Log($"[SystemCheck] {result}: {StepsVisited} steps, {Errors} errors, {MissingAudio.Count} missing clips");
+            Debug.Log($"[SystemCheck] {result}: {StepsVisited} steps, {Errors} errors, {MissingAudio.Count} missing clips  ·  {Platform.Summary}");
             if (GameFlow.TestMode) yield break;
-            string body = $"{result}\n\nSteps run: {StepsVisited}\nErrors: {Errors}\nMissing audio: {MissingAudio.Count}\n\n" + string.Join("\n", ErrorLog);
+            string body = $"{result}\n\nSteps run: {StepsVisited}\nErrors: {Errors}\nMissing audio: {MissingAudio.Count}\n{Platform.Summary}\n\n" + string.Join("\n", ErrorLog);
             int c = -1;
             yield return Menu.Choose("SYSTEM CHECK", body, new[] { "BACK TO TITLE" }, i => c = i, -0.25f);
             GameFlow.Reload();
