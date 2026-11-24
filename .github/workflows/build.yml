@@ -140,6 +140,7 @@ jobs:
           androidExportType: androidPackage
           versioning: Semantic
           buildMethod: Resonance.EditorTools.OpenXRVariant.BuildCI
+          allowDirtyBuild: true   # the job removes XREAL from the manifest before building
       - name: Locate APK
         run: |
           f=$(find build -name "*.apk" | head -1)
