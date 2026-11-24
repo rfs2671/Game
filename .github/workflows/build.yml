@@ -90,6 +90,7 @@ jobs:
           buildName: Resonance
           androidExportType: androidPackage
           versioning: Semantic
+          buildMethod: Resonance.EditorTools.CIBuild.Build
       - name: Locate APK
         id: apk
         run: |

@@ -38,43 +38,8 @@ namespace Resonance.EditorTools
             "ARSessionFeature", "ARCameraFeature", "ARPlaneFeature", "ARAnchorFeature", "ARRaycastFeature",
         };
 
-        /// <summary>Entry point for game-ci/unity-builder (buildMethod). Exits Unity with 0 on success, 1 on failure.</summary>
-        public static void BuildCI()
-        {
-            try
-            {
-                Apply();
-                string path = ArgValue("-customBuildPath") ?? "build/Android/Resonance-openxr.apk";
-                var version = ArgValue("-buildVersion");
-                if (!string.IsNullOrEmpty(version) && version != "none") PlayerSettings.bundleVersion = version;
-                if (int.TryParse(ArgValue("-androidVersionCode"), out int code) && code > 0) PlayerSettings.Android.bundleVersionCode = code;
-                EditorUserBuildSettings.buildAppBundle = false;
-                EditorUserBuildSettings.exportAsGoogleAndroidProject = false;
-                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(path)));
-
-                var scenes = EditorBuildSettings.scenes.Where(x => x.enabled).Select(x => x.path).ToArray();
-                var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
-                {
-                    scenes = scenes, locationPathName = path,
-                    target = BuildTarget.Android, targetGroup = BuildTargetGroup.Android, options = BuildOptions.None,
-                });
-                var sum = report.summary;
-                Debug.Log($"[Resonance/OpenXR] Build {sum.result}: {path} ({sum.totalSize / 1048576} MB, {sum.totalErrors} errors)");
-                EditorApplication.Exit(sum.result == BuildResult.Succeeded ? 0 : 1);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError("[Resonance/OpenXR] " + e);
-                EditorApplication.Exit(1);
-            }
-        }
-
-        static string ArgValue(string name)
-        {
-            var a = Environment.GetCommandLineArgs();
-            for (int i = 0; i < a.Length - 1; i++) if (a[i] == name) return a[i + 1];
-            return null;
-        }
+        /// <summary>game-ci buildMethod for the OpenXR APK.</summary>
+        public static void BuildCI() => CIBuild.Run(openXR: true);
 
         [MenuItem("Resonance/Build Variant/OpenXR (Android)")]
         public static void Apply()
@@ -98,7 +63,9 @@ namespace Resonance.EditorTools
             var settings = OpenXRSettingsFor(android);
             if (settings == null)
                 throw new BuildFailedException("[Resonance/OpenXR] OpenXR settings for Android not found.");
-            var all = (Array)settings.GetType().GetMethod("GetFeatures", Type.EmptyTypes).Invoke(settings, null);
+            var getFeatures = settings.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .First(m => m.Name == "GetFeatures" && !m.IsGenericMethod && m.GetParameters().Length == 0);   // not GetFeatures<T>()
+            var all = (Array)getFeatures.Invoke(settings, null);
             var missing = new List<string>(Features);
             foreach (var f in all)
             {
@@ -136,7 +103,7 @@ namespace Resonance.EditorTools
         static Type FindType(string fullName) =>
             AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetType(fullName, false)).FirstOrDefault(t => t != null);
 
-        static object OpenXRSettingsFor(BuildTargetGroup group)
+        internal static object OpenXRSettingsFor(BuildTargetGroup group)
         {
             // Make sure every feature class has its settings sub-asset before reading them.
             FindType("UnityEditor.XR.OpenXR.Features.FeatureHelpers")
