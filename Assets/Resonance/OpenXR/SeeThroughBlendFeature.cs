@@ -3,6 +3,7 @@ using UnityEngine.XR.OpenXR.Features;
 using UnityEngine.XR.OpenXR.NativeTypes;
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.XR.OpenXR.Features;   // OpenXRFeatureAttribute (editor-only, in the runtime assembly)
 #endif
 
 namespace Resonance.OpenXRSupport
