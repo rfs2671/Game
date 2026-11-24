@@ -101,14 +101,81 @@ jobs:
         with:
           name: Resonance-apk
           path: Resonance.apk
-      - name: Publish release (download this on the Beam Pro)
+
+  build-openxr:
+    name: Build Android APK (OpenXR variant)
+    needs: license-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          large-packages: false
+      - uses: actions/checkout@v4
+      - name: Drop the XREAL SDK from this variant (nothing is downloaded)
+        run: |
+          python3 - <<'PY'
+          import json
+          p = 'Packages/manifest.json'
+          m = json.load(open(p))
+          m['dependencies'].pop('com.xreal.xr', None)
+          open(p, 'w').write(json.dumps(m, indent=2))
+          PY
+          rm -f Packages/packages-lock.json
+          rm -f Assets/XR/Loaders/XREALXRLoader.asset* Assets/XR/Settings/XREALSettings.asset*
+          grep -c xreal Packages/manifest.json || echo "XREAL removed from manifest"
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-openxr-${{ hashFiles('Packages/manifest.json', 'ProjectSettings/ProjectVersion.txt') }}
+          restore-keys: Library-openxr-
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: Android
+          buildName: Resonance-openxr
+          androidExportType: androidPackage
+          versioning: Semantic
+          buildMethod: Resonance.EditorTools.OpenXRVariant.BuildCI
+      - name: Locate APK
+        run: |
+          f=$(find build -name "*.apk" | head -1)
+          [ -z "$f" ] && { echo "::error::No OpenXR APK produced"; exit 1; }
+          cp "$f" Resonance-openxr.apk
+          ls -la Resonance-openxr.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Resonance-openxr-apk
+          path: Resonance-openxr.apk
+
+  release:
+    name: Publish release
+    needs: [build, build-openxr]
+    if: ${{ !cancelled() && (needs.build.result == 'success' || needs.build-openxr.result == 'success') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: Resonance*-apk
+          merge-multiple: true
+      - name: List APKs
+        id: apk
+        run: |
+          ls -la *.apk
+          echo "list=$(ls *.apk | tr '\n' ' ')" >> $GITHUB_OUTPUT
+      - name: Publish release (download on the device)
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
           name: Resonance build ${{ github.run_number }}
           prerelease: true
-          files: Resonance.apk
+          fail_on_unmatched_files: false
+          files: "*.apk"
           body: |
-            Debug-signed test build from commit ${{ github.sha }} (${{ steps.apk.outputs.size }}).
-            Install on the Beam Pro: open this page in the browser, download Resonance.apk, allow "install unknown apps", open it.
-            Then run **SYSTEM CHECK** from the title menu.
+            Debug-signed test builds from commit ${{ github.sha }}: ${{ steps.apk.outputs.list }}
+            - **Resonance.apk** (XREAL loader, ${{ needs.build.result }}): Air 2 Ultra on Beam Pro / supported phone.
+            - **Resonance-openxr.apk** (OpenXR loader + Meta OpenXR, ${{ needs.build-openxr.result }}): OpenXR runtimes (e.g. Meta Quest). Installs side by side as com.rfs2671.resonance.openxr.
+            Open this page on the device, download the APK, allow "install unknown apps", open it, then run **SYSTEM CHECK** from the title menu.

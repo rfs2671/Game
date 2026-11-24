@@ -4,9 +4,13 @@
     "references": [
         "Resonance",
         "Unity.XR.ARFoundation",
-        "Unity.XR.CoreUtils"
+        "Unity.XR.CoreUtils",
+        "Unity.XR.Management",
+        "Unity.XR.Management.Editor"
     ],
-    "includePlatforms": ["Editor"],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
@@ -14,7 +18,16 @@
     "autoReferenced": false,
     "defineConstraints": [],
     "versionDefines": [
-        { "name": "com.unity.xr.arfoundation", "expression": "5.0.0", "define": "RESONANCE_ARF" }
+        {
+            "name": "com.unity.xr.arfoundation",
+            "expression": "5.0.0",
+            "define": "RESONANCE_ARF"
+        },
+        {
+            "name": "com.unity.xr.management",
+            "expression": "4.0.0",
+            "define": "RESONANCE_XRMGMT"
+        }
     ],
     "noEngineReferences": false
 }

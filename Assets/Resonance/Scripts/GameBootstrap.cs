@@ -34,9 +34,9 @@ namespace Resonance
                 cam = c.AddComponent<Camera>();
                 c.AddComponent<AudioListener>();
             }
-            // Optical see-through: black is transparent, so clear to black.
-            cam.clearFlags = CameraClearFlags.SolidColor;
-            cam.backgroundColor = Color.black;
+            // See-through: clear to TRANSPARENT black. Additive glasses show black as the room; passthrough
+            // compositors (OpenXR / Meta) need alpha 0 to show the room behind the game.
+            RuntimeRig.ClearTransparent(cam);
             cam.nearClipPlane = 0.05f;
             var lookMode = Save.LookChoice == 0 ? LookMode.Cinematic : Save.LookChoice == 1 ? LookMode.Glasses
                 : glassesLookOnDevice && !Application.isEditor ? LookMode.Glasses : look;

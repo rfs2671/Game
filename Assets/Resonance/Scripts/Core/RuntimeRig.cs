@@ -43,6 +43,13 @@ namespace Resonance
             }
         }
 
+        /// <summary>Solid clear to (0,0,0,0): additive glasses show black as the real room, passthrough uses alpha 0.</summary>
+        public static void ClearTransparent(Camera cam)
+        {
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = new Color(0f, 0f, 0f, 0f);
+        }
+
         public static void EnsureRig()
         {
             var cam = Camera.main;
@@ -52,6 +59,7 @@ namespace Resonance
                 cam = c.AddComponent<Camera>();
                 c.AddComponent<AudioListener>();
             }
+            ClearTransparent(cam);
             if (!XRActive)
             {
                 // Editor / simulator: put the camera at standing eye height under a rig root the simulator can move.
@@ -74,6 +82,8 @@ namespace Resonance
             cam.transform.localPosition = Vector3.zero;
             cam.transform.localRotation = Quaternion.identity;
             cam.nearClipPlane = 0.05f;
+            // Camera feature (OpenXR/Meta passthrough). Disables itself quietly on runtimes without a camera subsystem.
+            if (cam.GetComponent<ARCameraManager>() == null) cam.gameObject.AddComponent<ARCameraManager>();
 #if RESONANCE_INPUTSYSTEM
             if (cam.GetComponent<TrackedPoseDriver>() == null)
             {
