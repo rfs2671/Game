@@ -75,6 +75,8 @@ namespace Resonance
 
         readonly HandState[] hands = { new HandState { side = Hand.Left }, new HandState { side = Hand.Right } };
         Transform head, space;
+        /// <summary>Transform the joint poses are expressed in (the one TryPose uses). Null until resolved.</summary>
+        public Transform PoseSpace => space;
         bool simulating;
         float simReach = 0.5f, simPitch;
 

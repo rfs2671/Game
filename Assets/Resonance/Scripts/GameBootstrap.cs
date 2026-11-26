@@ -45,6 +45,7 @@ namespace Resonance
 
             var hi = gameObject.AddComponent<HandInput>();
             hi.forceSimulator = forceSimulator || GameFlow.TestMode;
+            gameObject.AddComponent<HandVisuals>();
             gameObject.AddComponent<Hud>();
             gameObject.AddComponent<Player>();
             gameObject.AddComponent<Arena>();
